@@ -1,20 +1,41 @@
-% Main - Trajecotry Capture 2D
+%------------------------------------------------------------------------%
+% Billy Orion Mazotti
+% Department of Aerospace Engineering, University of Michigan, Ann Arbor
+% Laboratory for Air Transportation, Infrastructure, and Connected 
+% Environments (LATTICE)
+%------------------------------------------------------------------------%
 
-%% LOAD SF DATA
+%{
+
+Preparation Tasks:
+1. Download data from OpenStreetMap as shape (.shp) files (recommend using
+MyGeoData for ease of data conversion)
+2. Use OSM_2_Formatted.m to convert raw data .shp files to .mat files used
+for anlaysis in main.m
+
+Running Steps:
+1. Load Formatted Datasets 
+
+%}
+
+%% LOAD FORMATTED DATASETS
 clear
 clc
 close all
 
-city_choices = ["SF","NYC","LA"];
+%----------------------- SELECT Dataset Variables -----------------------%
+city_choices = ["San Francisco","New York City","Los Angeles"];
 city = city_choices(1);
-
 altitude = 200;
+%------------------------------------------------------------------------%
 
-if city == "SF"
 
-    disp("Datasets Loading ...")
-    
-    % ------------------- SAN FRANCISCO DATASETS ------------------- %
+
+if city == "San Francisco"
+
+    disp("San Francisco Datasets Loading ...")
+
+    %------------------- SAN FRANCISCO DATASETS -------------------%
     %--- sensor locations ---%
     %building sensor location
     load_buildings_1 = load('FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_sensors_N160927.mat');
@@ -60,6 +81,7 @@ if city == "SF"
         xyBuildings = unique(xyBuildings_old,'rows');
     end
     
+
     %--- city contours data ---%
     load_struct = load('FormattedDatasets/SF_formatted/SF_border_convex.mat');
     S_contour_convex = load_struct.S_out;
@@ -82,12 +104,12 @@ if city == "SF"
         S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
         S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
     end
-    disp("Datasets Loading Complete")
+    disp("San Francisco Datasets Loading Complete")
 
 
-elseif city == "LA"
+elseif city == "Los Angeles"
 
-    disp("Datasets Loading ...")
+    disp("Los Angeles Datasets Loading ...")
     
     % ------------------- LOS ANGELES DATASETS ------------------- %
     %--- sensor locations ---%
@@ -170,11 +192,13 @@ elseif city == "LA"
         S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
         S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
     end
-    disp("Datasets Loading Complete")
+    disp("Los Angeles Datasets Loading Complete")
 
-elseif city == "NYC"
+    
+elseif city == "New York City"
 
-    disp("Datasets Loading ...")
+    disp("New York City Datasets Loading ...")
+
     % ------------------- NEY YORK CITY DATASETS ------------------- %
     %--- sensor locations ---%
     %building sensor location
@@ -239,11 +263,11 @@ elseif city == "NYC"
         S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
         S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
     end
-
-    disp("Datasets Loading Complete")
+    disp("New York City Datasets Loading Complete")
 end
 
-%% SELECT ENVIONRMENT SETTINGS & GENERATE ENVIRONMENT 
+
+%---------------------- VIEW SIMULATED ENVIORNMENT ----------------------%
 
 disp("Normalizing Datasets ...")
 [entireMapEdges_local,xyBuildings_local,xyCustomers_local_unfiltered, ...
@@ -273,84 +297,71 @@ vendor_cng_per = sum(sum(xyVendors_local-xyVendors_local_unfiltered,2) ~=0)/leng
 xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2,2)));
 
 
-disp("Genrating Receiver Locations ...")
-% select receiver radius
-D_rad_BLA = 250;            % [m] bluetooth legacy advertising
-D_rad_BLR = 1000;           % [m] bluetooth long range
-D_rad_WFN = 2000;           % [m] Wi-Fi NAN
-D_rad_WFB = 2000;           % [m] Wi-Fi Beacon
-D_rad = D_rad_WFB;          % sensor radius for simulation
-num_receivers = 3;
-[xyBuildingSensorLocations] = ...
-        GenerateSensorLocations(S_building_sens_local,num_receivers);
-disp("Genrating Receiver Locations Complete!")
 
-
-% view occupancy map + customer, vendor locations
-
+% View Occupancy Map
 figure()
-%--- TITLES ---%
-% fig_1_title = "San Francisco Customers and Vendors";
-% fig_1_title = "Los Angeles Customers and Vendors";
-% fig_1_title = "New York City Customers and Vendors";
-
-% fig_1_title = "San Francisco - 0ft";
-% fig_1_title = "Los Angeles - 200ft";
-% fig_1_title = "New York City - 0ft";
 
 hold on
-%--- show occupancy map ---%
-% show(omap,"local")
-
-%--- show pseudo occupancy map ---%
+% show occupancy map
+show(omap,"local")
+% show pseudo occupancy map
 scatter(xyBuildings_local(:,1),xyBuildings_local(:,2),1,'k')
 
-%--- show vendors and customers ---%
-% scatter(xyCustomers_local(:,1),xyCustomers_local(:,2),5,'filled', ...
-%     'DisplayName','customers','MarkerFaceColor',[0 1 1],'MarkerEdgeColor',[0 1 1])
-% scatter(xyVendors_local(:,1),xyVendors_local(:,2),50,'^', ...
-%     'DisplayName','vendors','MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0 0 0])
+% show city contour
+h = plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1);
+for idx = 1:1:size(struct2table(S_contours),1)
+    plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
+end
+hold off
 
-%---% show city contour ---%
+xlabel('X [m]','Interpreter','Latex','FontSize',15)
+ylabel('Y [m]','Interpreter','Latex','FontSize',15)
+ax = ancestor(h, 'axes');
+ax.XAxis.Exponent = 4;
+ax.YAxis.Exponent = 4;
+title('')
+sgtitle(city + " - " +altitude+ "ft",'interpreter','latex','FontSize',15)
+axis equal
+
+customer_vendor_title = city + " Customers and Vendors";
+
+
+
+% View Vendors and Customers
+figure()
+
+hold on
+% show city contour
 h = plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1);
 for idx = 1:1:size(struct2table(S_contours),1)
 % for idx = 1:1:1
     plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
 end
 
-%--- show receiver circles ---%
-% viscircles(xyBuildingSensorLocations, ...
-%             D_rad*ones([size(xyBuildingSensorLocations,1),1]), ...
-%             'linewidth',1,'LineStyle','-','Color','red');
-
+scatter(xyCustomers_local(:,1),xyCustomers_local(:,2),5,'filled', ...
+    'DisplayName','customers','MarkerFaceColor',[0 1 1],'MarkerEdgeColor',[0 1 1])
+scatter(xyVendors_local(:,1),xyVendors_local(:,2),50,'^', ...
+    'DisplayName','vendors','MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0 0 0])
 hold off
 
-%--- show legend ---%
-% legend({'customers','vendors'},'location','northeast')
-
-% title('')
 xlabel('X [m]','Interpreter','Latex','FontSize',15)
 ylabel('Y [m]','Interpreter','Latex','FontSize',15)
 ax = ancestor(h, 'axes');
 ax.XAxis.Exponent = 4;
 ax.YAxis.Exponent = 4;
-% 
-% sgtitle(fig_1_title,'interpreter','latex','FontSize',15)
+sgtitle(city + " Customers and Vendors",'interpreter','latex','FontSize',15)
 axis equal
 
 num_customers = size(xyCustomers_local,1);
 num_vendors = size(xyVendors_local,1);
-disp("Number of Recievers: " + num2str(num_receivers))
-disp("Number of Vendors: " + num2str(size(xyVendors_local,1)))
-disp("Number of Customers: " + num2str(size(xyCustomers_local,1)))
+disp("Number of Vendor/Start Locations: " + num2str(size(xyVendors_local,1)))
+disp("Number of Customers/Stop Locations: " + num2str(size(xyCustomers_local,1)))
 
 
 %% Experiment
 
 generate_od = true;
 generate_rrt = false;
-
-% select receiver radius
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% --- SENSOR PARAMETERS --- %%%%%%%%%%%%%%%%%%%%%%%
@@ -363,8 +374,8 @@ D_rad = 1000;          % sensor radius for simulation %%%
 % select number of receivers
 num_receivers = 30;                                  %%%
 % select number of trials
-num_receiver_distribs = 20;                             
-num_paths = 1000;
+num_receiver_distribs = 1;                             
+num_paths = 1;
 
 
 MAX_RANGE_RULE = false;
@@ -483,8 +494,7 @@ end
 tEnd = toc(tStart);
 disp("Run Complete")
 
-% ANALYZE EXPERIMENT
-
+%--- ANALYZE EXPERIMENT ---%
 figure()
 hold on
 convergence_line_od = zeros([num_paths,1]);
@@ -509,7 +519,6 @@ xlabel("Number of Paths For "+num2str(num_receiver_distribs) ...
 ylabel('Average Coverage \%',"Interpreter","latex",'FontSize',15)
 sgtitle('Convergence of Average Trajectory Coverage Over 10 Distributions', ...
     "Interpreter","latex",'FontSize',15)
-legend('location','northwest')
 
 disp(' ')
 disp(' ')
