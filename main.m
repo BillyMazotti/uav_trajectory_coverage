@@ -13,9 +13,6 @@ MyGeoData for ease of data conversion)
 2. Use OSM_2_Formatted.m to convert raw data .shp files to .mat files used
 for anlaysis in main.m
 
-Running Steps:
-1. Load Formatted Datasets 
-
 %}
 
 %% LOAD FORMATTED DATASETS
@@ -60,10 +57,10 @@ if city == "San Francisco"
     xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
 
     %--- city contours data ---%
-    load_struct = load('FormattedDatasets/SF_formatted/SF_border_convex.mat');
-    S_contour_convex = load_struct.S_out;
-    load_struct = load('FormattedDatasets/SF_formatted/SF_border.mat');
-    S_contours = load_struct.S_out;
+    S_contour_convex = load('FormattedDatasets/SF_formatted/SF_border_convex.mat').S_out;
+%     S_contour_convex = load_struct;
+    S_contours = load('FormattedDatasets/SF_formatted/SF_border.mat').S_out;
+%     S_contours = load_struct.S_out;
     S_contours(2).contour = S_contours(1).contour;
     size(struct2table(S_contours),1);
     
@@ -197,29 +194,41 @@ disp("Normalizing Datasets ...")
 disp("Normalizing Complete!")
 
 
-disp("Generating Occupancy Map ...")
+
 % max display map HxW ~20,000x20,000 
 mapHeight = entireMapEdges_local(3);
 mapWidth = entireMapEdges_local(4);
+
+% hand-tuned resolutions for viewing occupancy map (based-on machine RAM)
 if city == "San Francisco"
-    mapResolution = 0.7;
+    mapResolution = 1.00;
 elseif city == "Los Angeles"
     mapResolution = 0.55;
 elseif city == "New York City"
     mapResolution = 0.65;
 end
+
+
+
+disp("Generating Visual Occupancy Map ...")
 omap = binaryOccupancyMap(mapHeight+100,mapWidth+100,mapResolution);
 % load in building obstacles
 setOccupancy(omap,xyBuildings_local,1);
-disp("Generating Occupancy Map Complete!")
+disp("Generating Visual Occupancy Map Complete!")
 
 % confirm customer and vendor locations are not on occupied spaces
 xyCustomers_local = CheckLocationOccupancy(omap,xyCustomers_local_unfiltered);
 xyVendors_local = CheckLocationOccupancy(omap,xyVendors_local_unfiltered);
+
+% the percentage and number of vendor and customer locations that needed to 
+% be moved off of occupied spaces
+% percentages
 customer_cng_per = sum(sum(xyCustomers_local-xyCustomers_local_unfiltered,2) ~=0)/length(xyCustomers_local);
-xyCustomer_change = max(sqrt(sum((xyCustomers_local - xyCustomers_local_unfiltered).^2,2)));
 vendor_cng_per = sum(sum(xyVendors_local-xyVendors_local_unfiltered,2) ~=0)/length(xyVendors_local);
+% total number
+xyCustomer_change = max(sqrt(sum((xyCustomers_local - xyCustomers_local_unfiltered).^2,2)));
 xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2,2)));
+% [SUGGESTION] add statistics about moved distances lengths
 
 
 
@@ -247,7 +256,6 @@ ax.YAxis.Exponent = 4;
 title('')
 sgtitle(city + " - " +altitude+ "ft",'interpreter','latex','FontSize',15)
 axis equal
-
 customer_vendor_title = city + " Customers and Vendors";
 
 
@@ -283,10 +291,33 @@ disp("Number of Vendor/Start Locations: " + num2str(size(xyVendors_local,1)))
 disp("Number of Customers/Stop Locations: " + num2str(size(xyCustomers_local,1)))
 
 
+
+% prepare occupancy map for non-visual tasks; need to set map resolution to
+% 1 to set map to 1 cell/meter
+disp("Generating 1-1 Occupancy Map ...")
+omap = binaryOccupancyMap(mapHeight+100,mapWidth+100,mapResolution);
+% load in building obstacles
+setOccupancy(omap,xyBuildings_local,1);
+disp("Generating 1-1 Occupancy Map Complete!")
+
+% confirm customer and vendor locations are not on occupied spaces
+xyCustomers_local = CheckLocationOccupancy(omap,xyCustomers_local_unfiltered);
+xyVendors_local = CheckLocationOccupancy(omap,xyVendors_local_unfiltered);
+
+% the percentage and number of vendor and customer locations that needed to 
+% be moved off of occupied spaces
+% percentages
+customer_cng_per = sum(sum(xyCustomers_local-xyCustomers_local_unfiltered,2) ~=0)/length(xyCustomers_local);
+vendor_cng_per = sum(sum(xyVendors_local-xyVendors_local_unfiltered,2) ~=0)/length(xyVendors_local);
+% total numbedr
+xyCustomer_change = max(sqrt(sum((xyCustomers_local - xyCustomers_local_unfiltered).^2,2)));
+xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2,2)));
+% [SUGGESTION] add statistics about moved distances lengths
+
 %% Experiment
 
-generate_od = true;
-generate_rrt = false;
+generate_od = true;     % generate origin-destination/straight-line
+generate_rrt = false;   % generate RRT*
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% --- SENSOR PARAMETERS --- %%%%%%%%%%%%%%%%%%%%%%%
