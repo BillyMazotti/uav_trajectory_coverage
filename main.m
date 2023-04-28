@@ -25,10 +25,15 @@ close all
 
 %----------------------- SELECT Dataset Variables -----------------------%
 city_choices = ["San Francisco","New York City","Los Angeles"];
-city = city_choices(2);
+city = city_choices(1);
 altitude = 200;
-%------------------------------------------------------------------------%
 
+%------------------------- CONVERSION CONSTANTS -------------------------%
+
+lat2meters = 10000000/90;
+long2meters = 40075161.2/360;
+
+%------------------------------------------------------------------------%
 
 if city == "San Francisco"
 
@@ -47,26 +52,12 @@ if city == "San Francisco"
     vendor_file = "FormattedDatasets/SF_formatted/2_3_23_SF_vendors_N159.mat";
     xyVendors = CollectCustomerVendorLocations(vendor_file);
     
-    
-    if altitude == 200
-        %--- occupancy data ---%
-        load_buildings_1 = load('FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H200ft_N154.mat');
-        S_building_occ_1 = load_buildings_1.S_out;
-        xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
-        
-        xyBuildings_old = [xy_data_1(1:size(xy_data_1,1)/2),xy_data_1(1+size(xy_data_1,1)/2:end)];
-        xyBuildings = unique(xyBuildings_old,'rows');
-    end
-    if altitude == 400
-        %--- occupancy data ---%
-        load_buildings_1 = load('FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H400ft_N48.mat');
-        S_building_occ_1 = load_buildings_1.S_out;
-        xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
-        
-        xyBuildings_old = [xy_data_1(1:size(xy_data_1,1)/2),xy_data_1(1+size(xy_data_1,1)/2:end)];
-        xyBuildings = unique(xyBuildings_old,'rows');
-    end
-    
+    %--- building occupancy map data ---%
+    occupancy_files.altitude_200 = ...
+        ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H200ft_N154.mat"];
+    occupancy_files.altitude_400 = ...
+        ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H400ft_N48.mat"];
+    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
 
     %--- city contours data ---%
     load_struct = load('FormattedDatasets/SF_formatted/SF_border_convex.mat');
@@ -76,10 +67,9 @@ if city == "San Francisco"
     S_contours(2).contour = S_contours(1).contour;
     size(struct2table(S_contours),1);
     
+    %--- map calibration parameters ---%
     minX_map_lat = -130;
     minY_map_long = 0;
-    lat2meters = 10000000/90;
-    long2meters = 40075161.2/360;
     minX_map_m = minX_map_lat * lat2meters;
     minY_map_m = minY_map_long * long2meters;
     
@@ -113,42 +103,19 @@ elseif city == "Los Angeles"
     vendor_file = "FormattedDatasets/LA_formatted/2_3_23_LA_vendors_N453.mat";
     xyVendors = CollectCustomerVendorLocations(vendor_file);
     
-    
-    %--- occupancy data ---%
-    load_buildings_1 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H200ft_N20.mat');
-    S_building_occ_1 = load_buildings_1.S_out;
-    xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
-    load_buildings_2 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H200ft_N224.mat');
-    S_building_occ_2 = load_buildings_2.S_out;
-    xy_data_2 = cell2mat(struct2cell(S_building_occ_2));
-    load_buildings_3 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H200ft_N144.mat');
-    S_building_occ_3 = load_buildings_3.S_out;
-    xy_data_3 = cell2mat(struct2cell(S_building_occ_3));
-    load_buildings_4 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H200ft_N21.mat');
-    S_building_occ_4 = load_buildings_4.S_out;
-    xy_data_4 = cell2mat(struct2cell(S_building_occ_4));
-    
-%     load_buildings_1 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H400ft_N0.mat');
-%     S_building_occ_1 = load_buildings_1.S_out;
-%     xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
-%     load_buildings_2 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H400ft_N57.mat');
-%     S_building_occ_2 = load_buildings_2.S_out;
-%     xy_data_2 = cell2mat(struct2cell(S_building_occ_2));
-%     load_buildings_3 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H400ft_N53.mat');
-%     S_building_occ_3 = load_buildings_3.S_out;
-%     xy_data_3 = cell2mat(struct2cell(S_building_occ_3));
-%     load_buildings_4 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H400ft_N0.mat');
-%     S_building_occ_4 = load_buildings_4.S_out;
-%     xy_data_4 = cell2mat(struct2cell(S_building_occ_4));
+    %--- building occupancy map data ---%
+    occupancy_files.altitude_200 = ...
+    ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H200ft_N20.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H200ft_N224.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H200ft_N144.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H200ft_N21.mat"];
+    occupancy_files.altitude_400 = ...
+    ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H400ft_N0.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H400ft_N57.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H400ft_N53.mat",...
+    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H400ft_N0.mat"];
+    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
 
-    
-    xyBuildings_old = [xy_data_1(1:size(xy_data_1,1)/2),xy_data_1(1+size(xy_data_1,1)/2:end);
-                    xy_data_2(1:size(xy_data_2,1)/2),xy_data_2(1+size(xy_data_2,1)/2:end);
-                    xy_data_3(1:size(xy_data_3,1)/2),xy_data_3(1+size(xy_data_3,1)/2:end);
-                    xy_data_4(1:size(xy_data_4,1)/2),xy_data_4(1+size(xy_data_4,1)/2:end)];
-    xyBuildings = unique(xyBuildings_old,'rows');
-    
-    
     %--- city contours data ---%
     load_struct = load('FormattedDatasets/LA_formatted/LA_border_convex.mat');
     S_contour_convex = load_struct.S_out;
@@ -156,10 +123,9 @@ elseif city == "Los Angeles"
     S_contours(1).contour = load_struct.S_out(1).contour;
     S_contours(2).contour = load_struct.S_out(1).contour;
     
+    %--- map calibration parameters ---%
     minX_map_lat = -130;
     minY_map_long = 0;
-    lat2meters = 10000000/90;
-    long2meters = 40075161.2/360;
     minX_map_m = minX_map_lat * lat2meters;
     minY_map_m = minY_map_long * long2meters;
     
@@ -190,18 +156,12 @@ elseif city == "New York City"
     vendor_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_vendors_N838.mat";
     xyVendors = CollectCustomerVendorLocations(vendor_file);
     
-    
-    %--- occupancy data ---%
-    load_buildings_1 = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_occupancy_H200ft_N1388.mat');
-    S_building_occ_1 = load_buildings_1.S_out;
-    xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
-    load_buildings_2 = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_occupancy_H200ft_N55.mat');
-    S_building_occ_2 = load_buildings_2.S_out;
-    xy_data_2 = cell2mat(struct2cell(S_building_occ_2));
-    
-    xyBuildings_old = [xy_data_1(1:size(xy_data_1,1)/2),xy_data_1(1+size(xy_data_1,1)/2:end);
-                    xy_data_2(1:size(xy_data_2,1)/2),xy_data_2(1+size(xy_data_2,1)/2:end)];
-    xyBuildings = unique(xyBuildings_old,'rows');
+    %--- building occupancy map data ---%
+    occupancy_files.altitude_200 = ...
+        ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_occupancy_H200ft_N1388.mat"];
+    occupancy_files.altitude_400 = ...
+        ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_occupancy_H200ft_N55.mat"];
+    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
     
     
     %--- city contours data ---%
@@ -210,10 +170,9 @@ elseif city == "New York City"
     load_struct = load('FormattedDatasets/NYC_formatted/NYC_border.mat');
     S_contours = load_struct.S_out;
     
+    %--- map calibration parameters ---%
     minX_map_lat = -100;
     minY_map_long = 15;
-    lat2meters = 10000000/90;
-    long2meters = 40075161.2/360;
     minX_map_m = minX_map_lat * lat2meters;
     minY_map_m = minY_map_long * long2meters;
     
@@ -765,4 +724,18 @@ function xyCustVend = CollectCustomerVendorLocations(cust_vend_file)
     
 end
 
+function xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude)
+    
+    altitude_fieldname = "altitude_" + num2str(altitude);
+    xyBuildings_old = [];
 
+    for occupancy_file_idx = 1:length(occupancy_files.(altitude_fieldname))
+        filename = occupancy_files.(altitude_fieldname)(occupancy_file_idx);
+        S_building_occ = load(filename).S_out;
+        xy_data = cell2mat(struct2cell(S_building_occ));
+        xyBuildings_old = [xyBuildings_old; [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)]];
+    end
+
+    xyBuildings = unique(xyBuildings_old,'rows');
+
+end
