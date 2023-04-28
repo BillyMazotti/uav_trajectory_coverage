@@ -25,10 +25,9 @@ close all
 
 %----------------------- SELECT Dataset Variables -----------------------%
 city_choices = ["San Francisco","New York City","Los Angeles"];
-city = city_choices(1);
+city = city_choices(2);
 altitude = 200;
 %------------------------------------------------------------------------%
-
 
 
 if city == "San Francisco"
@@ -37,30 +36,17 @@ if city == "San Francisco"
 
     %------------------- SAN FRANCISCO DATASETS -------------------%
     %--- sensor locations ---%
-    %building sensor location
-    load_buildings_1 = load('FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_sensors_N160927.mat');
-    S_building_sens_1 = load_buildings_1.S_out;
-    xy_data_1 = [S_building_sens_1.XLocation,S_building_sens_1.YLocation];
+    receiver_files = ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_sensors_N160927.mat"];
+    S_building_sens = CollectSensorLocations(receiver_files);
     
-    %remove duplicate coordiantes
-    xy_data_all = [[xy_data_1(:,1)],[xy_data_1(:,2)]];
-    xy_data_unique = unique(xy_data_all,'rows');
+    %--- customer/stop locations ---%
+    customer_file = "FormattedDatasets/SF_formatted/2_3_23_SF_customers_N125446.mat";
+    xyCustomers = CollectCustomerVendorLocations(customer_file);
+
+    %--- vendor/start locations ---%
+    vendor_file = "FormattedDatasets/SF_formatted/2_3_23_SF_vendors_N159.mat";
+    xyVendors = CollectCustomerVendorLocations(vendor_file);
     
-    S_building_sens.XLocation = xy_data_unique(:,1);
-    S_building_sens.YLocation = xy_data_unique(:,2);
-    
-    
-    %--- start/stop locations ---%
-    %customer/stop locations
-    load_buildings = load('FormattedDatasets/SF_formatted/2_3_23_SF_customers_N125446.mat');
-    S_customer_stop = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_customer_stop));
-    xyCustomers = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
-    %vendor/start locations
-    load_buildings = load('FormattedDatasets/SF_formatted/2_3_23_SF_vendors_N159.mat');
-    S_vendor_start = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_vendor_start));
-    xyVendors = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
     
     if altitude == 200
         %--- occupancy data ---%
@@ -113,42 +99,19 @@ elseif city == "Los Angeles"
     
     % ------------------- LOS ANGELES DATASETS ------------------- %
     %--- sensor locations ---%
-    %building sensor location
-    load_buildings_1 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_sensors_N538415.mat');
-    S_building_sens_1 = load_buildings_1.S_out;
-    xy_data_1 = [S_building_sens_1.XLocation,S_building_sens_1.YLocation];
-    load_buildings_2 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_sensors_N542339.mat');
-    S_building_sens_2 = load_buildings_2.S_out;
-    xy_data_2 = [S_building_sens_2.XLocation,S_building_sens_2.YLocation];
-    load_buildings_3 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_sensors_N695004.mat');
-    S_building_sens_3 = load_buildings_3.S_out;
-    xy_data_3 = [S_building_sens_3.XLocation,S_building_sens_3.YLocation];
-    load_buildings_4 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_sensors_N227406.mat');
-    S_building_sens_4 = load_buildings_4.S_out;
-    xy_data_4 = [S_building_sens_4.XLocation,S_building_sens_4.YLocation];
-    
-    %remove duplicate coordiantes
-    xy_data_all = [[xy_data_1(:,1);xy_data_2(:,1); ...
-                    xy_data_3(:,1);xy_data_4(:,1)], ...
-                    [xy_data_1(:,2);xy_data_2(:,2); ...
-                    xy_data_3(:,2);xy_data_4(:,2)]];
-    xy_data_unique = unique(xy_data_all,'rows');
-    
-    S_building_sens.XLocation = xy_data_unique(:,1);
-    S_building_sens.YLocation = xy_data_unique(:,2);
-    
-    
-    %--- start/stop locations ---%
-    %customer/stop locations
-    load_buildings = load('FormattedDatasets/LA_formatted/2_2_23_LA_customers_N360183.mat');
-    S_customer_stop = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_customer_stop));
-    xyCustomers = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
-    %vendor/start locations
-    load_buildings = load('FormattedDatasets/LA_formatted/2_3_23_LA_vendors_N453.mat');
-    S_vendor_start = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_vendor_start));
-    xyVendors = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
+    receiver_files = ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_sensors_N538415.mat",
+                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_sensors_N542339.mat",
+                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_sensors_N695004.mat",
+                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_sensors_N227406.mat"];
+    S_building_sens = CollectSensorLocations(receiver_files);
+
+    %--- customer/stop locations ---%
+    customer_file = "FormattedDatasets/LA_formatted/2_2_23_LA_customers_N360183.mat";
+    xyCustomers = CollectCustomerVendorLocations(customer_file);
+
+    %--- vendor/start locations ---%
+    vendor_file = "FormattedDatasets/LA_formatted/2_3_23_LA_vendors_N453.mat";
+    xyVendors = CollectCustomerVendorLocations(vendor_file);
     
     
     %--- occupancy data ---%
@@ -164,6 +127,20 @@ elseif city == "Los Angeles"
     load_buildings_4 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H200ft_N21.mat');
     S_building_occ_4 = load_buildings_4.S_out;
     xy_data_4 = cell2mat(struct2cell(S_building_occ_4));
+    
+%     load_buildings_1 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H400ft_N0.mat');
+%     S_building_occ_1 = load_buildings_1.S_out;
+%     xy_data_1 = cell2mat(struct2cell(S_building_occ_1));
+%     load_buildings_2 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H400ft_N57.mat');
+%     S_building_occ_2 = load_buildings_2.S_out;
+%     xy_data_2 = cell2mat(struct2cell(S_building_occ_2));
+%     load_buildings_3 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H400ft_N53.mat');
+%     S_building_occ_3 = load_buildings_3.S_out;
+%     xy_data_3 = cell2mat(struct2cell(S_building_occ_3));
+%     load_buildings_4 = load('FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H400ft_N0.mat');
+%     S_building_occ_4 = load_buildings_4.S_out;
+%     xy_data_4 = cell2mat(struct2cell(S_building_occ_4));
+
     
     xyBuildings_old = [xy_data_1(1:size(xy_data_1,1)/2),xy_data_1(1+size(xy_data_1,1)/2:end);
                     xy_data_2(1:size(xy_data_2,1)/2),xy_data_2(1+size(xy_data_2,1)/2:end);
@@ -201,34 +178,17 @@ elseif city == "New York City"
 
     % ------------------- NEY YORK CITY DATASETS ------------------- %
     %--- sensor locations ---%
-    %building sensor location
-    load_buildings_1 = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_sensors_N685639.mat');
-    S_building_sens_1 = load_buildings_1.S_out;
-    xy_data_1 = [S_building_sens_1.XLocation,S_building_sens_1.YLocation];
-    load_buildings_2 = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_sensors_N688024.mat');
-    S_building_sens_2 = load_buildings_2.S_out;
-    xy_data_2 = [S_building_sens_2.XLocation,S_building_sens_2.YLocation];
-    
-    %remove duplicate coordiantes
-    xy_data_all = [[xy_data_1(:,1);xy_data_2(:,1)], ...
-                    [xy_data_1(:,2);xy_data_2(:,2)]];
-    
-    xy_data_unique = unique(xy_data_all,'rows');
-    S_building_sens.XLocation = xy_data_unique(:,1);
-    S_building_sens.YLocation = xy_data_unique(:,2);
-    
-    
-    %--- start/stop locations ---%
-    %customer/stop locations
-    load_buildings = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_customers_N958747.mat');
-    S_customer_stop = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_customer_stop));
-    xyCustomers = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
-    %vendor/start locations
-    load_buildings = load('FormattedDatasets/NYC_formatted/2_3_23_NYC_vendors_N838.mat');
-    S_vendor_start = load_buildings.S_out;
-    xy_data = cell2mat(struct2cell(S_vendor_start));
-    xyVendors = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
+    receiver_files = ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_sensors_N685639.mat",
+                    "FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_sensors_N688024.mat"];
+    S_building_sens = CollectSensorLocations(receiver_files);
+
+    %--- customer/stop locations ---%
+    customer_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_customers_N958747.mat";
+    xyCustomers = CollectCustomerVendorLocations(customer_file);
+
+    %--- vendor/start locations ---%
+    vendor_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_vendors_N838.mat";
+    xyVendors = CollectCustomerVendorLocations(vendor_file);
     
     
     %--- occupancy data ---%
@@ -266,7 +226,7 @@ elseif city == "New York City"
     disp("New York City Datasets Loading Complete")
 end
 
-
+%%
 %---------------------- VIEW SIMULATED ENVIORNMENT ----------------------%
 
 disp("Normalizing Datasets ...")
@@ -282,7 +242,13 @@ disp("Generating Occupancy Map ...")
 % max display map HxW ~20,000x20,000 
 mapHeight = entireMapEdges_local(3);
 mapWidth = entireMapEdges_local(4);
-mapResolution = 0.7;
+if city == "San Francisco"
+    mapResolution = 0.7;
+elseif city == "Los Angeles"
+    mapResolution = 0.55;
+elseif city == "New York City"
+    mapResolution = 0.65;
+end
 omap = binaryOccupancyMap(mapHeight+100,mapWidth+100,mapResolution);
 % load in building obstacles
 setOccupancy(omap,xyBuildings_local,1);
@@ -370,12 +336,12 @@ generate_rrt = false;
 % D_rad_WFN = 2000;           % [m] Wi-Fi NAN
 % D_rad_WFB = 2000;           % [m] Wi-Fi Beacon
 
-D_rad = 1000;          % sensor radius for simulation %%%
+D_rad = 2000;          % sensor radius for simulation %%%
 % select number of receivers
-num_receivers = 30;                                  %%%
+num_receivers = 8;                                  %%%
 % select number of trials
 num_receiver_distribs = 1;                             
-num_paths = 1;
+num_paths = 1000;
 
 
 MAX_RANGE_RULE = false;
@@ -764,7 +730,39 @@ function xy_out = CheckLocationOccupancy(omap,xy_locations)
 end
 
 
+function S_building_sens = CollectSensorLocations(sensor_files)
+    %{
+        input: 
+        sensor_files (list): list of .mat files that each stores 1 struct
+                            "S_out" with fields XLocaiton and YLocation;
+                            stores the (x,y) locations of receivers
+        output:
+        S_buildings_sens (struct): struct that saves all (x,y) locations of
+                                    thed receivers with zero duplicate
+                                    locations        
+    %}
+    xy_data_all = [];
+    for sensor_file_idx = 1:length(sensor_files)
+        sensor_region = load(sensor_files(sensor_file_idx)).S_out;
+        xy_data = [sensor_region.XLocation,sensor_region.YLocation];
+        xy_data_all = [xy_data_all;[xy_data(:,1),xy_data(:,2)]];
+    end
 
+    %remove duplicate coordiantes
+    xy_data_unique = unique(xy_data_all,'rows');
 
+    S_building_sens.XLocation = xy_data_unique(:,1);
+    S_building_sens.YLocation = xy_data_unique(:,2);
+
+end
+
+function xyCustVend = CollectCustomerVendorLocations(cust_vend_file)
+    
+    load_buildings = load(cust_vend_file);
+    S_location = load_buildings.S_out;
+    xy_data = cell2mat(struct2cell(S_location));
+    xyCustVend = [xy_data(1:size(xy_data,1)/2),xy_data(1+size(xy_data,1)/2:end)];
+    
+end
 
 
