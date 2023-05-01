@@ -58,7 +58,7 @@ function [entireMapEdges_local,xyBuildings,xyCustomers, ...
     
     % normalize city contour
     S_contour_convex.contour = S_contour_convex.contour - [entireMapEdges_global(1),entireMapEdges_global(2)];
-    for idx = 1:1:size(struct2table(S_contours),1)
+    for idx = 1:1:size(S_contours,2)
         S_contours(idx).contour = S_contours(idx).contour - [entireMapEdges_global(1),entireMapEdges_global(2)];
     end
     % find eges of normalized Customer, Vendor, Building sensor map

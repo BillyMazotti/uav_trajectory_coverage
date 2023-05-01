@@ -13,6 +13,53 @@ MyGeoData for ease of data conversion)
 2. Use OSM_2_Formatted.m to convert raw data .shp files to .mat files used
 for anlaysis in main.m
 
+NECESSARY FILES PER CITY
+receiver_files
+- .mat file(s) storing a 1x1 struct with 1 field called S_out
+- S_out contains fields "XLocaiton" and "YLocation" each with array
+values of type double and shape [-1,1]
+- significance: stores the x,y coordinates of all possible receiver
+locations (i.e. the centers of each building footprint); [SUGGESTION FOR 
+FUTURE WORK] incorporate building height into receiver locations
+
+customer_file
+- .mat file storing a 1x1 struct with 1 field called S_out
+- S_out contains fields "XLocaiton" and "YLocation" each with array
+values of type double and shape [-1,1]
+- significance: stores the x,y coordinates of all possible customer/stop
+locations
+
+vendor_file
+- .mat file storing a 1x1 struct with 1 field called S_out
+- S_out contains fields "XLocaiton" and "YLocation" each with array
+values of type double and shape [-1,1]
+- significance: stores the x,y coordinates of all possible vendor/start
+locations
+
+occupancy_files
+- .mat file(s) storing a 1x1 struct with 1 field called S_out
+- S_out contains fields "ObstacleLocationX" and "ObstacleLocationY"
+each with array values of type double and shape [-1,1]
+- significance: assuming for a city discretized into 1x1 meter 2D cells, 
+these files store the coordiantes of every cell that's occupied by a
+building (which was determined based on building footprints
+- note: set occupancy_files.altitude_[HEIGHT IN FT] to the file direcotry
+
+convex_contour_file
+- .mat file storing a 1x1 struct with 1 field called S_out
+- S_out contains field "contour" with array value of type double and shape
+[-1,2]
+-significance: stores the lattitude, longitude coordiantes of a convex 
+polygon encompassing the city
+
+city_contour_files
+- .mat file(s) storing a 1x1 struct with 1 field called S_out
+- S_out contains field "contour" with value of [-1,1] with element values
+of arrays of type double and shape [-1,2]
+- significance: stores the lattitude, longitude coordinates of a city's
+contour
+
+
 %}
 
 %% LOAD FORMATTED DATASETS
@@ -22,7 +69,7 @@ close all
 
 %----------------------- SELECT Dataset Variables -----------------------%
 city_choices = ["San Francisco","New York City","Los Angeles"];
-city = city_choices(1);
+city = city_choices(3);
 altitude = 200;
 
 %------------------------- CONVERSION CONSTANTS -------------------------%
@@ -32,155 +79,116 @@ long2meters = 40075161.2/360;
 
 %------------------------------------------------------------------------%
 
-if city == "San Francisco"
 
-    disp("San Francisco Datasets Loading ...")
+switch(city)
+% if city == "San Francisco"
 
-    %------------------- SAN FRANCISCO DATASETS -------------------%
-    %--- sensor locations ---%
-    receiver_files = ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_sensors_N160927.mat"];
-    S_building_sens = CollectSensorLocations(receiver_files);
+    case "San Francisco"
+        %--- map calibration parameters ---%
+        % only being used for calibrating contours at the moment; could be
+        % moved to the contour file preparation script instead
+        minX_map_lat = -130;
+        minY_map_long = 0;
     
-    %--- customer/stop locations ---%
-    customer_file = "FormattedDatasets/SF_formatted/2_3_23_SF_customers_N125446.mat";
-    xyCustomers = CollectCustomerVendorLocations(customer_file);
+        %------------------- SAN FRANCISCO DATASETS -------------------%
+        % sensor locations
+        receiver_files = ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_sensors_N160927.mat"];
+        % customer/stop locations
+        customer_file = "FormattedDatasets/SF_formatted/2_3_23_SF_customers_N125446.mat";
+        % vendor/start locations
+        vendor_file = "FormattedDatasets/SF_formatted/2_3_23_SF_vendors_N159.mat";
+        % building occupancy map data
+        occupancy_files.altitude_200 = ...
+            ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H200ft_N154.mat"];
+        occupancy_files.altitude_400 = ...
+            ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H400ft_N48.mat"];
+        % convex city contour
+        convex_contour_file = "FormattedDatasets/SF_formatted/SF_border_convex.mat";
+        % city contour(s)
+        city_contours_file = "FormattedDatasets/SF_formatted/SF_border.mat";
+        
 
-    %--- vendor/start locations ---%
-    vendor_file = "FormattedDatasets/SF_formatted/2_3_23_SF_vendors_N159.mat";
-    xyVendors = CollectCustomerVendorLocations(vendor_file);
+    case "Los Angeles"
     
-    %--- building occupancy map data ---%
-    occupancy_files.altitude_200 = ...
-        ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H200ft_N154.mat"];
-    occupancy_files.altitude_400 = ...
-        ["FormattedDatasets/SF_formatted/2_3_23_SF_buidings_1_occupancy_H400ft_N48.mat"];
-    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
-
-    %--- city contours data ---%
-    S_contour_convex = load('FormattedDatasets/SF_formatted/SF_border_convex.mat').S_out;
-%     S_contour_convex = load_struct;
-    S_contours = load('FormattedDatasets/SF_formatted/SF_border.mat').S_out;
-%     S_contours = load_struct.S_out;
-    S_contours(2).contour = S_contours(1).contour;
-    size(struct2table(S_contours),1);
-    
-    %--- map calibration parameters ---%
-    minX_map_lat = -130;
-    minY_map_long = 0;
-    minX_map_m = minX_map_lat * lat2meters;
-    minY_map_m = minY_map_long * long2meters;
-    
-    S_contour_convex.contour(:,1) = round(S_contour_convex.contour(:,1)*lat2meters - minX_map_m);
-    S_contour_convex.contour(:,2) = round(S_contour_convex.contour(:,2)*long2meters - minY_map_m);
-    
-    for idx = 1:1:size(struct2table(S_contours),1)
-        S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
-        S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
-    end
-    disp("San Francisco Datasets Loading Complete")
-
-
-elseif city == "Los Angeles"
-
-    disp("Los Angeles Datasets Loading ...")
-    
-    % ------------------- LOS ANGELES DATASETS ------------------- %
-    %--- sensor locations ---%
-    receiver_files = ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_sensors_N538415.mat",
-                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_sensors_N542339.mat",
-                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_sensors_N695004.mat",
-                    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_sensors_N227406.mat"];
-    S_building_sens = CollectSensorLocations(receiver_files);
-
-    %--- customer/stop locations ---%
-    customer_file = "FormattedDatasets/LA_formatted/2_2_23_LA_customers_N360183.mat";
-    xyCustomers = CollectCustomerVendorLocations(customer_file);
-
-    %--- vendor/start locations ---%
-    vendor_file = "FormattedDatasets/LA_formatted/2_3_23_LA_vendors_N453.mat";
-    xyVendors = CollectCustomerVendorLocations(vendor_file);
-    
-    %--- building occupancy map data ---%
-    occupancy_files.altitude_200 = ...
-    ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H200ft_N20.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H200ft_N224.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H200ft_N144.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H200ft_N21.mat"];
-    occupancy_files.altitude_400 = ...
-    ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H400ft_N0.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H400ft_N57.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H400ft_N53.mat",...
-    "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H400ft_N0.mat"];
-    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
-
-    %--- city contours data ---%
-    load_struct = load('FormattedDatasets/LA_formatted/LA_border_convex.mat');
-    S_contour_convex = load_struct.S_out;
-    load_struct = load('FormattedDatasets/LA_formatted/LA_border.mat');
-    S_contours(1).contour = load_struct.S_out(1).contour;
-    S_contours(2).contour = load_struct.S_out(1).contour;
-    
-    %--- map calibration parameters ---%
-    minX_map_lat = -130;
-    minY_map_long = 0;
-    minX_map_m = minX_map_lat * lat2meters;
-    minY_map_m = minY_map_long * long2meters;
-    
-    S_contour_convex.contour(:,1) = round(S_contour_convex.contour(:,1)*lat2meters - minX_map_m);
-    S_contour_convex.contour(:,2) = round(S_contour_convex.contour(:,2)*long2meters - minY_map_m);
-    for idx = 1:1:size(struct2table(S_contours),1)
-        S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
-        S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
-    end
-    disp("Los Angeles Datasets Loading Complete")
+        %--- map calibration parameters ---%
+        % only being used for calibrating contours at the moment; could be
+        % moved to the contour file preparation script instead
+        minX_map_lat = -130;
+        minY_map_long = 0;
+            
+        % ------------------- LOS ANGELES DATASETS ------------------- %
+        % sensor locations
+        receiver_files = ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_sensors_N538415.mat",
+                        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_sensors_N542339.mat",
+                        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_sensors_N695004.mat",
+                        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_sensors_N227406.mat"];
+        % customer/stop locations
+        customer_file = "FormattedDatasets/LA_formatted/2_2_23_LA_customers_N360183.mat";
+        % vendor/start locations
+        vendor_file = "FormattedDatasets/LA_formatted/2_3_23_LA_vendors_N453.mat";
+        % building occupancy map data
+        occupancy_files.altitude_200 = ...
+        ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H200ft_N20.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H200ft_N224.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H200ft_N144.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H200ft_N21.mat"];
+        occupancy_files.altitude_400 = ...
+        ["FormattedDatasets/LA_formatted/2_2_23_LA_buidings_1_occupancy_H400ft_N0.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_2_occupancy_H400ft_N57.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_3_occupancy_H400ft_N53.mat",...
+        "FormattedDatasets/LA_formatted/2_2_23_LA_buidings_4_occupancy_H400ft_N0.mat"];
+        % convex city contour
+        convex_contour_file = "FormattedDatasets/LA_formatted/LA_border_convex.mat";
+        % city contour(s)
+        city_contours_file = "FormattedDatasets/LA_formatted/LA_border.mat";
 
     
-elseif city == "New York City"
+    case "New York City"
 
-    disp("New York City Datasets Loading ...")
-
-    % ------------------- NEY YORK CITY DATASETS ------------------- %
-    %--- sensor locations ---%
-    receiver_files = ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_sensors_N685639.mat",
-                    "FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_sensors_N688024.mat"];
-    S_building_sens = CollectSensorLocations(receiver_files);
-
-    %--- customer/stop locations ---%
-    customer_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_customers_N958747.mat";
-    xyCustomers = CollectCustomerVendorLocations(customer_file);
-
-    %--- vendor/start locations ---%
-    vendor_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_vendors_N838.mat";
-    xyVendors = CollectCustomerVendorLocations(vendor_file);
-    
-    %--- building occupancy map data ---%
-    occupancy_files.altitude_200 = ...
-        ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_occupancy_H200ft_N1388.mat"];
-    occupancy_files.altitude_400 = ...
-        ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_occupancy_H200ft_N55.mat"];
-    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
-    
-    
-    %--- city contours data ---%
-    load_struct = load('FormattedDatasets/NYC_formatted/NYC_border_convex.mat');
-    S_contour_convex = load_struct.S_out;
-    load_struct = load('FormattedDatasets/NYC_formatted/NYC_border.mat');
-    S_contours = load_struct.S_out;
-    
-    %--- map calibration parameters ---%
-    minX_map_lat = -100;
-    minY_map_long = 15;
-    minX_map_m = minX_map_lat * lat2meters;
-    minY_map_m = minY_map_long * long2meters;
-    
-    S_contour_convex.contour(:,1) = round(S_contour_convex.contour(:,1)*lat2meters - minX_map_m);
-    S_contour_convex.contour(:,2) = round(S_contour_convex.contour(:,2)*long2meters - minY_map_m);
-    for idx = 1:1:size(struct2table(S_contours),1)
-        S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
-        S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
-    end
-    disp("New York City Datasets Loading Complete")
+        % only being used for calibrating contours at the moment; could be
+        % moved to the contour file preparation script instead
+        %--- map calibration parameters ---%
+        minX_map_lat = -100;
+        minY_map_long = 15;
+        
+        % ------------------- NEY YORK CITY DATASETS ------------------- %
+        % sensor locations
+        receiver_files = ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_sensors_N685639.mat",
+                        "FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_sensors_N688024.mat"];
+        % customer/stop locations
+        customer_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_customers_N958747.mat";
+        % vendor/start locations
+        vendor_file = "FormattedDatasets/NYC_formatted/2_3_23_NYC_vendors_N838.mat";
+        % building occupancy map data
+        occupancy_files.altitude_200 = ...
+            ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_1_occupancy_H200ft_N1388.mat"];
+        occupancy_files.altitude_400 = ...
+            ["FormattedDatasets/NYC_formatted/2_3_23_NYC_buidings_2_occupancy_H200ft_N55.mat"];
+        % convex city contour
+        convex_contour_file = "FormattedDatasets/NYC_formatted/NYC_border_convex.mat";
+        % city contour(s)
+        city_contours_file = "FormattedDatasets/NYC_formatted/NYC_border.mat";
+           
 end
+
+disp(city + " Datasets Loading ...")
+
+% prepare datasets
+[S_building_sens,xyCustomers,xyVendors,xyBuildings,...
+    S_contour_convex,S_contours] ...
+                            = CollectCity(receiver_files,...
+                                            customer_file,...
+                                            vendor_file,...
+                                            occupancy_files,...
+                                            altitude,...
+                                            lat2meters,...
+                                            long2meters,...
+                                            minX_map_lat,...
+                                            minY_map_long,...
+                                            city_contours_file,...
+                                            convex_contour_file);
+
+disp(city + " Datasets Loading Complete!")
 
 %%
 %---------------------- VIEW SIMULATED ENVIORNMENT ----------------------%
@@ -228,7 +236,7 @@ vendor_cng_per = sum(sum(xyVendors_local-xyVendors_local_unfiltered,2) ~=0)/leng
 % total number
 xyCustomer_change = max(sqrt(sum((xyCustomers_local - xyCustomers_local_unfiltered).^2,2)));
 xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2,2)));
-% [SUGGESTION] add statistics about moved distances lengths
+% [SUGGESTION FOR FUTURE WORK] add statistics about moved distances lengths
 
 
 
@@ -243,7 +251,7 @@ scatter(xyBuildings_local(:,1),xyBuildings_local(:,2),1,'k')
 
 % show city contour
 h = plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1);
-for idx = 1:1:size(struct2table(S_contours),1)
+for idx = 1:1:size(S_contours,2)
     plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
 end
 hold off
@@ -266,7 +274,7 @@ figure()
 hold on
 % show city contour
 h = plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1);
-for idx = 1:1:size(struct2table(S_contours),1)
+for idx = 1:1:size(S_contours,2)
 % for idx = 1:1:1
     plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
 end
@@ -312,7 +320,7 @@ vendor_cng_per = sum(sum(xyVendors_local-xyVendors_local_unfiltered,2) ~=0)/leng
 % total numbedr
 xyCustomer_change = max(sqrt(sum((xyCustomers_local - xyCustomers_local_unfiltered).^2,2)));
 xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2,2)));
-% [SUGGESTION] add statistics about moved distances lengths
+% [[SUGGESTION FOR FUTURE WORK] add stats about moved distances lengths
 
 %% Experiment
 
@@ -534,7 +542,7 @@ if generate_od
     
     %---% show city contour ---%
     plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1)
-    for idx = 1:1:size(struct2table(S_contours),1)
+    for idx = 1:1:size(S_contours,2)
     % for idx = 1:1:1
         plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
     end
@@ -586,7 +594,7 @@ if generate_rrt
     
     %---% show city contour ---%
     plot(S_contour_convex_local.contour(:,1),S_contour_convex_local.contour(:,2),'k--','LineWidth',1)
-    for idx = 1:1:size(struct2table(S_contours),1)
+    for idx = 1:1:size(S_contours,2)
     % for idx = 1:1:1
         plot(S_contours_local(idx).contour(:,1),S_contours_local(idx).contour(:,2),'k','LineWidth',1)
     end
@@ -768,5 +776,32 @@ function xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude)
     end
 
     xyBuildings = unique(xyBuildings_old,'rows');
+
+end
+
+function [S_contour_convex, S_contours] = CollectContours(lat2meters,long2meters,minX_map_lat,minY_map_long,city_contours_file,convex_contour_file)
+
+    S_contour_convex = load(convex_contour_file).S_out;
+    S_contours = load(city_contours_file).S_out;
+
+    minX_map_m = minX_map_lat * lat2meters;
+    minY_map_m = minY_map_long * long2meters;
+
+    S_contour_convex.contour(:,1) = round(S_contour_convex.contour(:,1)*lat2meters - minX_map_m);
+    S_contour_convex.contour(:,2) = round(S_contour_convex.contour(:,2)*long2meters - minY_map_m);
+    
+    for idx = 1:1:size(S_contours,2)
+        S_contours(idx).contour(:,1) = round(S_contours(idx).contour(:,1)*lat2meters - minX_map_m);
+        S_contours(idx).contour(:,2) = round(S_contours(idx).contour(:,2)*long2meters - minY_map_m);
+    end
+end
+
+function [S_building_sens,xyCustomers,xyVendors,xyBuildings,S_contour_convex, S_contours] = CollectCity(receiver_files,customer_file,vendor_file,occupancy_files,altitude,lat2meters,long2meters,minX_map_lat,minY_map_long,city_contours_file,convex_contour_file)
+
+    S_building_sens = CollectSensorLocations(receiver_files);
+    xyCustomers = CollectCustomerVendorLocations(customer_file);
+    xyVendors = CollectCustomerVendorLocations(vendor_file);
+    xyBuildings = CollectBuildingOccupnacyPoints(occupancy_files,altitude);
+    [S_contour_convex, S_contours] = CollectContours(lat2meters,long2meters,minX_map_lat,minY_map_long,city_contours_file,convex_contour_file);
 
 end

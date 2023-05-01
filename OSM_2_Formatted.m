@@ -1,4 +1,4 @@
-%% Building Sensor Locations (HNoneft files)
+%% Building Receiver/Sensor Locations (HNoneft files)
 % Building Data Conversion from Shape Read to Mat File
 % asumes geometry of entires are polygons
 clear
@@ -20,12 +20,13 @@ minY_map_long = 15;
 city_section = 2;
 city = "NYC";
 
-filePath = "OSM_datasets/"+city+"_buildings_"+ ...
+filePath = "OSM_datasets/"+city+"/"+city+"_buildings_"+ ...
     num2str(city_section) + "/CutDown/building_polygon_HNoneft.mat";
+
 convexContourPath = "FormattedDatasets/NYC_formatted/"+city+"_border_convex.mat"
 
 
-oneContour = true;
+oneContour = true;  % necessary condition to consider all convex options
 lat2meters = 10000000/90;
 long2meters = 40075161.2/360;
 minX_map_m = minX_map_lat * lat2meters;
@@ -35,12 +36,14 @@ sensor_percentage = 1;
 
 load_building = load(convexContourPath);
 S_contour = load_building.S_out;
-[S_out,num] = PolygonXYLocation(filePath,minX_map_m,minY_map_m,lat2meters,long2meters,S_contour,oneContour)
+[S_out,num] = PolygonXYLocation(filePath,minX_map_m,minY_map_m,lat2meters,long2meters,S_contour,oneContour);
 
-outputFilePath = "FormattedDatasets/"+city+"_formatted/2_3_23_"+city+"_buidings_"+ ...
+outputFilePath = "FormattedDatasets/"+city+"_formatted/"+getDateLabel()+"_"+city+"_buidings_"+ ...
     num2str(city_section) + "_sensors_N"+num2str(num)+".mat"
 
 save(outputFilePath, 'S_out','-v7.3')
+
+disp("Receivers Saved!")
 
 
 %% Building Occupancy Map Data
@@ -96,12 +99,14 @@ if altitude_ft < 0
         "_occupancy_HNoneft_N"+ ...
         num2str(num_buildings)+".mat"
 else    
-    outputFilePath = "FormattedDatasets/"+city+"_formatted/2_3_23_"+city+"_buidings_"+ ...
+    outputFilePath = "FormattedDatasets/"+city+"_formatted/"+getDateLabel()+"_"+city+"_buidings_"+ ...
         num2str(city_section) + "_occupancy_H" + ...
         num2str(altitude_ft)+"ft_N"+num2str(num_buildings)+".mat"
 end
 
 save(outputFilePath, 'S_out','-v7.3')
+
+disp("Occupancy Map Data Saved!")
 
 %% Building Polygon Map Data
 clear
@@ -143,11 +148,13 @@ altitude_m = altitude_ft/3.281;
 [S_out,num_buildings] = PolygonMapCoords(filePath,numTableRows_raw,minX_map_m, ...
                             minY_map_m,lat2meters,long2meters,altitude_m,decimate,makeMeters,S_contour_convex);
 
-outputFilePath = "FormattedDatasets/"+city+"_formatted/PolygonMap/2_3_23_"+city+"_buidings_"+num_case+"_polygon_H" + ...
+outputFilePath = "FormattedDatasets/"+city+"_formatted/PolygonMap/"+getDateLabel()+"_"+city+"_buidings_"+num_case+"_polygon_H" + ...
                 num2str(altitude_ft)+"ft_N"+num2str(num_buildings)+".mat"
 
 % save file
 save(outputFilePath, 'S_out','-v7.3')
+
+disp("Polygon Map Data Saved!")
 
 %% ANALYSIS
 clear
@@ -193,27 +200,23 @@ clear
 clc
 
 % --- SF CONSTANTS & CORRECTIONS --- % (37.77N, -122.41W)
-% shapeFilePath_polygon = "OSM_datasets/SF_shopgeneral/shop_general_polygon.shp";
-% shapeFilePath_point = "OSM_datasets/SF_shopgeneral/shop_general_point.shp";
 % minX_map_lat = -130;
 % minY_map_long = 0;
-% load_struct = load('FormattedDatasets/SF_formatted/SF_border.mat');
-% S_contour = load_struct.S_out;
 
 % --- LA CONSTANTS & CORRECTIONS --- % (34.05N, -118.24W)
-% shapeFilePath_polygon = "OSM_datasets/LA_shopgeneral/shop_general_polygon.shp";
-% shapeFilePath_point = "OSM_datasets/LA_shopgeneral/shop_general_point.shp";
 % minX_map_lat = -130;
 % minY_map_long = 0;
-% load_struct = load('FormattedDatasets/LA_formatted/LA_border.mat');
-% S_contour = load_struct.S_out;
 
 % --- NYC CONSTANTS & CORRECTIONS --- % (40.71N, -74.0060W)
-shapeFilePath_polygon = "OSM_datasets/NYC_shopgeneral/shop_general_polygon.shp";
-shapeFilePath_point = "OSM_datasets/NYC_shopgeneral/shop_general_point.shp";
 minX_map_lat = -100;
 minY_map_long = 15;
-load_struct = load('FormattedDatasets/NYC_formatted/NYC_border.mat');
+
+city = "NYC";
+
+
+shapeFilePath_polygon = "OSM_datasets/"+city+"_shopgeneral/shop_general_polygon.shp";
+shapeFilePath_point = "OSM_datasets/"+city+"_shopgeneral/shop_general_point.shp";
+load_struct = load("FormattedDatasets/"+city+"_formatted/"+city+"_border.mat");
 S_contour = load_struct.S_out;
 
 oneContour = false;
@@ -230,32 +233,24 @@ S_out.YLocation = [S_out_point.YLocation;S_out_polygon.YLocation];
 
 %--- Save Data ---%
 num_vendors = size(S_out.XLocation,1);
-outputFilePath = "FormattedDatasets/NYC_formatted/" + ...
-            "2_3_23_NYC_vendors_N"+num2str(num_vendors)+".mat"
+outputFilePath = "FormattedDatasets/NYC_formatted/"+getDateLabel()+"_vendors_N"+num2str(num_vendors)+".mat"
 save(outputFilePath, 'S_out')
 
-% ARCHIVE
-% FormattedDatasets/VendorLocations_SF_ShopGeneralMygeodata_1_31_23_.mat
+disp("Vendor Data Saved!")
+
 
 %% Customer/Stop Locations
 clear
 clc
 
 % --- SF CONSTANTS & CORRECTIONS --- % (37.77N, -122.41W)
-% shapeFilePath = "OSM_datasets/SF_residential/residential_polygon.shp";
 % minX_map_lat = -130;
 % minY_map_long = 0;
-% load_struct = load('FormattedDatasets/SF_formatted/SF_border.mat');
-% S_contour = load_struct.S_out;
 % pop_density_sqr_miles = 18629.1;
-% pop_density_sqr_meters = pop_density_sqr_miles/(5280^2)*3.28084^2;
 
 % % --- LA CONSTANTS & CORRECTIONS --- % (34.05N, -118.24W)
-% shapeFilePath = "OSM_datasets/LA_residential/residential_polygon.shp";
 % minX_map_lat = -130;
 % minY_map_long = 0;
-% load_struct = load('FormattedDatasets/LA_formatted/LA_border.mat');
-% S_contour = load_struct.S_out(1);
 % pop_density_sqr_miles = 8304.2;
 
 % --- NYC CONSTANTS & CORRECTIONS --- % (40.71N, -74.0060W)
@@ -283,10 +278,11 @@ map_minXY_meters = [minX_map_m,minY_map_m;minX_map_m,minY_map_m];
                                 pop_density_sqr_meters,S_contour)
 
 
-%--- Save Data ---%
-outputFilePath = "FormattedDatasets/"+city+"_formatted/" + ...
-            "2_3_23_"+city+"_customers_N"+num2str(num_customers)+".mat"
+outputFilePath = "FormattedDatasets/"+city+"_formatted/"+getDateLabel()+"_"+city+"_customers_N"+num2str(num_customers)+".mat"
 save(outputFilePath, 'S_out')
+
+disp("Customer Data Saved!")
+
 
 
 %% FUNCTIONS
@@ -927,3 +923,14 @@ function [S_out,num] = PolygonXYLocation(filePath,minX_map_m,minY_map_m,lat2mete
     S_out.YLocation = yLocations;
 
 end
+
+function date_label = getDateLabel()
+
+    datetime_1 = strsplit(string(datetime),"-")
+    datetime_2 = strsplit(datetime_1(3)," ")
+    datetime_3 = strsplit(datetime_2(2),":");
+    date_label = ["Y"+datetime_2(1)+"_M"+datetime_1(2)+"_D"+datetime_1(1)+...
+        "_h"+datetime_3(1)+"_m"+datetime_3(2)+"_s"+datetime_3(3)]
+
+end
+
