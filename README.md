@@ -2,3 +2,5 @@ Using OpenStreetMap (organized by MyGeoData) data to model building, customer, a
 locations in US cities and determine the required number of 
 randomly distributed sensors to achieve a desired trajectory coverage portion for various path 
 planning algorithms (straight-line, RRT*).
+
+Code for Data Preparation and Experimentation will be uploaded soon!
