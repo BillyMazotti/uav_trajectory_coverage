@@ -23,7 +23,7 @@ city = "NYC";
 filePath = "OSM_datasets/"+city+"/"+city+"_buildings_"+ ...
     num2str(city_section) + "/CutDown/building_polygon_HNoneft.mat";
 
-convexContourPath = "FormattedDatasets/NYC_formatted/"+city+"_border_convex.mat"
+convexContourPath = "FormattedDatasets/"+city+"_formatted/"+city+"_border_convex.mat"
 
 
 oneContour = true;  % necessary condition to consider all convex options
@@ -233,7 +233,7 @@ S_out.YLocation = [S_out_point.YLocation;S_out_polygon.YLocation];
 
 %--- Save Data ---%
 num_vendors = size(S_out.XLocation,1);
-outputFilePath = "FormattedDatasets/NYC_formatted/"+getDateLabel()+"_vendors_N"+num2str(num_vendors)+".mat"
+outputFilePath = "FormattedDatasets/"+city+"_formatted/"+getDateLabel()+"_vendors_N"+num2str(num_vendors)+".mat"
 save(outputFilePath, 'S_out')
 
 disp("Vendor Data Saved!")

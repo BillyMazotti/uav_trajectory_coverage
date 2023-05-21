@@ -14,7 +14,7 @@ MyGeoData for ease of data conversion)
 for anlaysis in main.m
 
 NECESSARY FILES PER CITY
-receiver_files
+1. receiver_files
 - .mat file(s) storing a 1x1 struct with 1 field called S_out
 - S_out contains fields "XLocaiton" and "YLocation" each with array
 values of type double and shape [-1,1]
@@ -22,21 +22,21 @@ values of type double and shape [-1,1]
 locations (i.e. the centers of each building footprint); [SUGGESTION FOR 
 FUTURE WORK] incorporate building height into receiver locations
 
-customer_file
+2. customer_file
 - .mat file storing a 1x1 struct with 1 field called S_out
 - S_out contains fields "XLocaiton" and "YLocation" each with array
 values of type double and shape [-1,1]
 - significance: stores the x,y coordinates of all possible customer/stop
 locations
 
-vendor_file
+3. vendor_file
 - .mat file storing a 1x1 struct with 1 field called S_out
 - S_out contains fields "XLocaiton" and "YLocation" each with array
 values of type double and shape [-1,1]
 - significance: stores the x,y coordinates of all possible vendor/start
 locations
 
-occupancy_files
+4. occupancy_files
 - .mat file(s) storing a 1x1 struct with 1 field called S_out
 - S_out contains fields "ObstacleLocationX" and "ObstacleLocationY"
 each with array values of type double and shape [-1,1]
@@ -45,14 +45,14 @@ these files store the coordiantes of every cell that's occupied by a
 building (which was determined based on building footprints
 - note: set occupancy_files.altitude_[HEIGHT IN FT] to the file direcotry
 
-convex_contour_file
+5. convex_contour_file
 - .mat file storing a 1x1 struct with 1 field called S_out
 - S_out contains field "contour" with array value of type double and shape
 [-1,2]
 -significance: stores the lattitude, longitude coordiantes of a convex 
 polygon encompassing the city
 
-city_contour_files
+6. city_contour_files
 - .mat file(s) storing a 1x1 struct with 1 field called S_out
 - S_out contains field "contour" with value of [-1,1] with element values
 of arrays of type double and shape [-1,2]
