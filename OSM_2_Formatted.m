@@ -247,20 +247,21 @@ clc
 % minX_map_lat = -130;
 % minY_map_long = 0;
 % pop_density_sqr_miles = 18629.1;
+% city = "SF";
 
 % % --- LA CONSTANTS & CORRECTIONS --- % (34.05N, -118.24W)
 % minX_map_lat = -130;
 % minY_map_long = 0;
 % pop_density_sqr_miles = 8304.2;
+% city = "LA";
 
 % --- NYC CONSTANTS & CORRECTIONS --- % (40.71N, -74.0060W)
 minX_map_lat = -100;
 minY_map_long = 15;
 pop_density_sqr_miles = 29303.2;
-
 city = "NYC";
 
-shapeFilePath = "OSM_datasets/"+city+"_residential/residential_polygon.shp";
+shapeFilePath = "OSM_datasets/"+city+"/"+city+"_residential/residential_polygon.shp";
 load_struct = load("FormattedDatasets/"+city+"_formatted/"+city+"_border.mat");
 S_contour = load_struct.S_out;
 pop_density_sqr_meters = pop_density_sqr_miles/(5280^2)*3.28084^2;
@@ -437,32 +438,6 @@ function [S_out,num_customers] = CustomerStopLocations(shapeFilePath,numTableRow
                                         minX_map_m,minY_map_m,map_minXY_meters,lat2meters,long2meters, ...
                                         density,S_contour)
     
-    %{
-        Randomly select points in customer regions (polygons) to serve as 
-        customer sensor and delivery locations
-
-        Args:
-            shapeFilePath = "SF_residential/residential_polygon.shp";
-            numTableRows:   first X number of regions from raw database to 
-                            extract data from; set to 0 to extract from 
-                            all rows          
-            minX_map_lat:   minimum lattitue you'd expect (in degrees) to
-                            ensure that all lattitude values are postive
-            minY_map_long:  minimum longitude you'd expect (in degrees) to
-                            ensure that all lattitude values are postive
-            density:        number of homes per area (meter^2)
-            outputFilePath: file destination to save output struct "S_out"
-            LocationType:   customer, vendor, or building
-        Returns:
-            S_out:  struct with fields LocationType (= arg LocationType), 
-                    LocaitonX (values in meters), LocaitonY (values in 
-                    meters), and SensorActivated (values: false/true),
-                    LocationX and LocationY are the x,y coordinates of
-                    randomly generated locations withing the polygon
-                    regions defined in the input shapeFile
-
-    %}
-
     S_raw = shaperead(shapeFilePath);
     
     if numTableRows_raw == 0

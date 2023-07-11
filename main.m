@@ -69,7 +69,7 @@ close all
 
 %----------------------- SELECT Dataset Variables -----------------------%
 city_choices = ["San Francisco","New York City","Los Angeles"];
-city = city_choices(3);
+city = city_choices(1);
 altitude = 200;
 
 %------------------------- CONVERSION CONSTANTS -------------------------%
@@ -303,7 +303,7 @@ disp("Number of Customers/Stop Locations: " + num2str(size(xyCustomers_local,1))
 % prepare occupancy map for non-visual tasks; need to set map resolution to
 % 1 to set map to 1 cell/meter
 disp("Generating 1-1 Occupancy Map ...")
-omap = binaryOccupancyMap(mapHeight+100,mapWidth+100,mapResolution);
+omap = binaryOccupancyMap(mapHeight+100,mapWidth+100,1);
 % load in building obstacles
 setOccupancy(omap,xyBuildings_local,1);
 disp("Generating 1-1 Occupancy Map Complete!")
@@ -325,7 +325,7 @@ xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2
 %% Experiment
 
 generate_od = true;     % generate origin-destination/straight-line
-generate_rrt = false;   % generate RRT*
+generate_rrt = true;   % generate RRT*
 
 
 %%%%%%%%%%%%%%%%%%%%%%%% --- SENSOR PARAMETERS --- %%%%%%%%%%%%%%%%%%%%%%%
@@ -339,7 +339,7 @@ D_rad = 2000;          % sensor radius for simulation %%%
 num_receivers = 8;                                  %%%
 % select number of trials
 num_receiver_distribs = 1;                             
-num_paths = 1000;
+num_paths = 2;
 
 
 MAX_RANGE_RULE = false;
