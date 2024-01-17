@@ -431,7 +431,7 @@ function [S_out,num_buildings] = PolygonMapCoords(filePath,numTableRows_raw,minX
     S_out(1).vertices_RPS = vertices_RPS;
     disp("Number of Decimations: " + num2str(count))
 
-end
+    endC
 
 
 function [S_out,num_customers] = CustomerStopLocations(shapeFilePath,numTableRows_raw, ...

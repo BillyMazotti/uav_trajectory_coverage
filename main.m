@@ -285,13 +285,18 @@ scatter(xyVendors_local(:,1),xyVendors_local(:,2),50,'^', ...
     'DisplayName','vendors','MarkerFaceColor',[1 0 0],'MarkerEdgeColor',[0 0 0])
 hold off
 
-xlabel('X [m]','Interpreter','Latex','FontSize',15)
-ylabel('Y [m]','Interpreter','Latex','FontSize',15)
+xlabel('X [m]','Interpreter','Latex','FontSize',15,'fontname','Times New Roman')
+ylabel('Y [m]','Interpreter','Latex','FontSize',15,'fontname','Times New Roman')
 ax = ancestor(h, 'axes');
 ax.XAxis.Exponent = 4;
 ax.YAxis.Exponent = 4;
-sgtitle(city + " Customers and Vendors",'interpreter','latex','FontSize',15)
+ax.FontSize = 15;
+ax.FontName = 'Times New Roman';
+% sgtitle(city + " Customers and Vendors",'interpreter', ...
+%     'latex','FontSize',15,'fontname','Times New Roman')
 axis equal
+legend({'','','customers','vendors'},'location','northeast', ...
+    'fontname','Times New Roman')
 
 num_customers = size(xyCustomers_local,1);
 num_vendors = size(xyVendors_local,1);
@@ -323,7 +328,7 @@ xyVendor_change = max(sqrt(sum((xyVendors_local - xyVendors_local_unfiltered).^2
 % [[SUGGESTION FOR FUTURE WORK] add stats about moved distances lengths
 
 %% Experiment
-
+close all;
 generate_od = true;     % generate origin-destination/straight-line
 generate_rrt = true;   % generate RRT*
 
@@ -336,10 +341,10 @@ generate_rrt = true;   % generate RRT*
 
 D_rad = 2000;          % sensor radius for simulation %%%
 % select number of receivers
-num_receivers = 8;                                  %%%
+num_receivers = 3;                                  %%%
 % select number of trials
 num_receiver_distribs = 1;                             
-num_paths = 2;
+num_paths = 1;
 
 
 MAX_RANGE_RULE = false;
@@ -386,6 +391,7 @@ for distrib_idx = 1:1:num_receiver_distribs   % vary distributions
         
         % select start and goal points
         start_idx_rand = round(rand(1)*num_vendors);
+        start_idx_rand = 156;   % FOR FIGURE IN PAPER
         % edge case when start idx is 0
         if start_idx_rand == 0
             start_idx_rand = 1;
@@ -407,7 +413,10 @@ for distrib_idx = 1:1:num_receiver_distribs   % vary distributions
                 end
             end
         else
+            disp("HER")
+            disp(num_customers)
             goal_idx_rand = round(rand(1)*num_customers);
+            goal_idx_rand = 80000; % FOR FIGURE IN PAPER
             % edge case when goal idx is 0
             if goal_idx_rand == 0
                 goal_idx_rand = 1;
@@ -567,11 +576,13 @@ if generate_od
     
     hold off
     title('')
-    sgtitle(fig_2_title,'interpreter','latex','FontSize',15)
-    % legend({'','','','','','','','path undetected','path detected','orign','destination'},'location','northwest')
+    sgtitle(fig_2_title,'interpreter','latex','FontSize',15,'fontname','Times New Roman')
+    legend({'','','','','','','','path undetected','path detected','orign','destination'},'location','northwest')
     ax = ancestor(h, 'axes');
     ax.XAxis.Exponent = 4;
     ax.YAxis.Exponent = 4;
+    ax.FontSize = 15;
+    ax.FontName = 'Times New Roman';
     axis equal
 end
 
@@ -620,10 +631,13 @@ if generate_rrt
     hold off
     title('')
     sgtitle(fig_3_title,'interpreter','latex','FontSize',15)
-    % legend({'','','','','','','','path undetected','path detected','orign','destination'},'location','northwest')
+    legend({'','','','path undetected','path detected','orign','destination'}, ...
+        'location','northwest','fontname','Times New Roman','fontsize',15)
     ax = ancestor(h, 'axes');
     ax.XAxis.Exponent = 4;
     ax.YAxis.Exponent = 4;
+    ax.FontSize = 15;
+    ax.FontName = 'Times New Roman';
     axis equal
 end
 
